@@ -46,9 +46,26 @@ router.get('/:id', async(req, res)=>{
 router.put('/:id',async(req, res)=>{
     try{
         const response = await Product.findByIdAndUpdate({_id:req.params.id}, req.body,{new:true});
-        res.status(200).json(response);
+        if(!response){
+             return res.status(404).json({ message: "no product found to update" });
+        }
+        res.status(200).json({message: "Product updated successfully",response});
     }catch(e){
-        return res.status(404).json({ message: "no product found to update" });
+        return res.status(400).json({message: e.message});
+    }
+})
+
+router.delete('/:id',async(req, res)=>{
+    try{
+        const response = await Product.findByIdAndDelete({_id:req.params.id});
+        if(!response){
+             return res.status(404).json({ message: "no product found to be deleted" });
+        }
+        res.status(200).json({message:"Product deleted successfully",response});
+
+
+    }catch(e){
+        return res.status(400).json({message: e.message});
     }
 })
 
