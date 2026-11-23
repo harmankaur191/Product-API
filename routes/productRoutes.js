@@ -42,4 +42,14 @@ router.get('/:id', async(req, res)=>{
     
 });
 
+
+router.put('/:id',async(req, res)=>{
+    try{
+        const response = await Product.findByIdAndUpdate({_id:req.params.id}, req.body,{new:true});
+        res.status(200).json(response);
+    }catch(e){
+        return res.status(404).json({ message: "no product found to update" });
+    }
+})
+
 export default router;
