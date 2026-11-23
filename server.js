@@ -9,7 +9,7 @@ connection.then(()=> console.log('Database Connected Successfully!'))
 .catch((e)=> console.log('Failed to connect with database!',e));
 
 const app = express();
-
+app.set("json spaces",2);
 app.use(express.json());
 
 const port = 3000;

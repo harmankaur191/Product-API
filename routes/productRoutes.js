@@ -15,18 +15,18 @@ router.post('/', async (req, res) => {
 
 });
 
-router.get('/', async (req, res) => {
-    try {
-        const response = await Product.find({});
-        if (!response) {
-            return res.status(404).json({ message: "No Products found" });
-        }
-        res.json(response);
-    } catch (e) {
-        res.status(400).json({ message: e.message });
-    }
+// router.get('/', async (req, res) => {
+//     try {
+//         const response = await Product.find({});
+//         if (!response) {
+//             return res.status(404).json({ message: "No Products found" });
+//         }
+//         res.json(response);
+//     } catch (e) {
+//         res.status(400).json({ message: e.message });
+//     }
 
-});
+// });
 
 router.get('/:id', async(req, res)=>{
     try{
@@ -41,6 +41,47 @@ router.get('/:id', async(req, res)=>{
     }
     
 });
+
+router.get('/', async(req, res)=>{
+    console.log(req.query);
+    try{
+        
+        if(req.query.category ){
+        const result = await Product.find({category:req.query.category.trim()}).collation({locale:'en', strength:2});
+        res.status(200).json({message: 'Product found!',result})
+    }
+    
+    const hasminPrice = req.query.minPrice !=null && req.query.minPrice!=="";
+    const hasmaxPrice = req.query.maxPrice !=null && req.query.maxPrice!=="";
+    const price = {};
+    if(hasminPrice){
+        const min = Number(req.query.minPrice);
+        if(Number.isNaN(min)){
+            return res.status(400).json({ message: 'minPrice must be a valid number'});
+    }
+        
+         price.$gte = Number(min);
+        
+    }
+        
+    if(hasmaxPrice){
+        const max = Number(req.query.maxPrice);
+        if(Number.isNaN(max)){
+            return res.status(400).json({ message: 'maxPrice must be a valid number'});
+        }
+        price.$lte = Number(max);
+    }
+    const result = await Product.find({price:price});
+    if(result.length===0){
+         return res.status(404).json({ message: "Product not found!" });
+    }
+        res.status(200).json({message: 'Product found!',result})
+    }catch(e){
+        res.status(400).json({ message: e.message });
+    }
+    
+
+})
 
 
 router.put('/:id',async(req, res)=>{
