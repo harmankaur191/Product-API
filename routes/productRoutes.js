@@ -34,21 +34,17 @@ router.get('/:id', async (req, res) => {
 
 
 
-
-
 router.get('/', async (req, res) => {
     const page = req.query.page || 1;
-    const limit = req.query.limit || 5;
+    const limit = req.query.limit || 10;
     const currentPage = Math.max(1, Number(page) || 1);
     const perPage = Math.max(1, Number(limit) || 10);
     const skip =(currentPage -1)*perPage;
+    const filter ={}
     try {
-        if (req.query.category) {
-            const result = await Product.find({ category: req.query.category.trim() }).collation({ locale: 'en', strength: 2 }).skip(skip).limit(perPage).lean();
-            if (result.length===0) {
-                return res.status(404).json({ message: `Product with category` + req.query.category + 'not found' });
-            }
-            return res.status(200).json(result);
+        if (req.query.category && req.query.category !== "") {
+
+            filter.category = req.query.category.trim();
         }
 
 
@@ -65,6 +61,7 @@ router.get('/', async (req, res) => {
                 price.$gte = Number(min);
 
             }
+           
 
             if (hasmaxPrice) {
                 const max = Number(req.query.maxPrice);
@@ -73,34 +70,32 @@ router.get('/', async (req, res) => {
                 }
                 price.$lte = Number(max);
             }
-            const result = await Product.find({ price: price }).skip(skip).limit(perPage).lean();
-            if (result.length === 0) {
-                return res.status(404).json({ message: "Product not found!" });
-            }
-            return res.status(200).json(result);
+             filter.price = price;
 
         }
-        if (req.query.sortBy) {
+        
             const sort = {}
             if (req.query.sortBy === "price_asc") {
                 sort.price = 1;
             } else if (req.query.sortBy === "price_desc") {
                 sort.price = -1;
+            }else{
+                sort._id = 1;
             }
 
-            const sortResponse = await Product.find().sort(sort).skip(skip).limit(perPage).lean();
-            return res.status(200).json(sortResponse);
-        }
-       
-        const response = await Product.find({}).skip(skip).limit(perPage).lean();
-        if (response.length===0) {
-            return res.status(404).json({ message: "No Products found" });
-        }
-        return res.status(200).json(response);
+            const result = Product.find(filter);
+            if(filter.category){
+                result.collation({locale:'en', strength:2});
+            }
+            const response = await result.sort(sort).skip(skip).limit(perPage).lean();
+            if(response.length === 0){
+                return res.status(404).json({message:"No Products found"});
+            }
+            return res.status(200).json(response);
 
 
     } catch (e) {
-        res.status(400).json({ message: e.message });
+       return res.status(400).json({ message: e.message });
     }
 
 
